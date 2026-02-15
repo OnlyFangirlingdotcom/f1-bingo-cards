@@ -106,6 +106,8 @@
         }
 
         let almostBingoCount = 0;
+        let completedRows = new Array(5).fill(false);
+        let completedCols = new Array(5).fill(false);
         const stars = document.getElementById('stars');
 
         function checkAlmostBingo() {
@@ -115,11 +117,19 @@
 
             let newAlmost = 0;
 
-            for (const line of [...rows, ...cols]) {
-                if (line.every(idx => cells[idx].classList.contains('marked'))) {
+            rows.forEach((line, index) => {
+                if (line.every(idx => cells[idx].classList.contains('marked')) && !completedRows[index]) {
                     newAlmost++;
+                    completedRows[index] = true;
                 }
-            }
+            });
+
+            cols.forEach((line, index) => {
+                if (line.every(idx => cells[idx].classList.contains('marked')) && !completedCols[index]) {
+                    newAlmost++;
+                    completedCols[index] = true;
+                }
+            });
 
             if (newAlmost > 0) {
                 almostBingoCount += newAlmost;
@@ -142,7 +152,6 @@
                 }
             }
 
-            // Full card
             if (cells.every(cell => cell.classList.contains('marked'))) {
                 isFullBingo = true;
             }
@@ -155,19 +164,28 @@
         function saveMarks() {
             const cells = Array.from(grid.children);
             const marks = cells.map(cell => cell.classList.contains('marked'));
-            localStorage.setItem(`bingoMarks_${code}_${player}`, JSON.stringify(marks));
+            localStorage.setItem(`bingoMarks_${code}_${player}`, JSON.stringify({
+                marks: marks,
+                stars: almostBingoCount,
+                completedRows: completedRows,
+                completedCols: completedCols
+            }));
         }
 
         function loadMarks() {
             const saved = localStorage.getItem(`bingoMarks_${code}_${player}`);
             if (saved) {
-                const marks = JSON.parse(saved);
+                const data = JSON.parse(saved);
                 const cells = Array.from(grid.children);
                 for (let i = 0; i < 25; i++) {
-                    if (marks[i]) cells[i].classList.add('marked');
+                    if (data.marks[i]) cells[i].classList.add('marked');
                 }
-                checkAlmostBingo(); // Update stars if loaded with almost bingos
-                checkWin();         // Check if loaded with full bingo
+                almostBingoCount = data.stars || 0;
+                completedRows = data.completedRows || new Array(5).fill(false);
+                completedCols = data.completedCols || new Array(5).fill(false);
+                stars.textContent = `Stars: ${almostBingoCount}`;
+                checkAlmostBingo();
+                checkWin();
             }
         }
 
