@@ -84,14 +84,9 @@
 
         function checkWin() {
             const cells = Array.from(grid.children);
-            let isFullBingo = false;
 
-            // Full card check (whole card must be full)
+            // Full card only (no diagonals)
             if (cells.every(cell => cell.classList.contains('marked'))) {
-                isFullBingo = true;
-            }
-
-            if (isFullBingo) {
                 document.getElementById('win').style.display = 'block';
             }
         }
