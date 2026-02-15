@@ -85,7 +85,7 @@
         function checkWin() {
             const cells = Array.from(grid.children);
 
-            // Full card only (no diagonals)
+            // Full bingo = whole card only
             if (cells.every(cell => cell.classList.contains('marked'))) {
                 document.getElementById('win').style.display = 'block';
             }
