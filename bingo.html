@@ -4,110 +4,71 @@
     <meta charset="UTF-8">
     <title>F1 2026 Bingo - Player Card</title>
     <style>
-        body {
-            background: #000;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #ff0000;
-            margin-bottom: 20px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            max-width: 700px;
-            margin: 0 auto 30px;
-        }
-        .cell {
-            background: #111;
-            border: 2px solid #ff0000;
-            padding: 15px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-        }
-        .cell:hover {
-            background: #222;
-            transform: scale(1.03);
-        }
-        .marked {
-            background: #00ff00 !important;
-            color: #000;
-            text-decoration: line-through;
-            transform: scale(1.05);
-        }
-        #win {
-            display: none;
-            font-size: 60px;
-            color: #ffd700;
-            margin-top: 30px;
-            font-weight: bold;
-        }
-        button {
-            background: #ff0000;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 18px;
-            cursor: pointer;
-            margin: 10px;
-            border-radius: 5px;
-        }
+        body { background:#000; color:#fff; font-family:Arial, sans-serif; text-align:center; margin:0; padding:20px; }
+        h1 { color:#ff0000; margin-bottom:20px; }
+        .grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; max-width:700px; margin:0 auto 20px; }
+        .cell { background:#111; border:2px solid #ff0000; padding:15px; font-size:14px; font-weight:bold; cursor:pointer; transition:all 0.3s; min-height:80px; display:flex; align-items:center; justify-content:center; }
+        .cell:hover { background:#222; transform:scale(1.05); }
+        .marked { background:#00ff00 !important; color:#000; text-decoration:line-through; transform:scale(1.05); }
+        #win { display:none; font-size:60pt; color:#ffd700; margin-top:20px; font-weight:bold; }
+        button { background:#ff0000; color:white; border:none; padding:12px 30px; font-size:18px; cursor:pointer; margin:10px; }
+        #stars { color:#ffd700; font-size:24pt; margin-top:20px; }
     </style>
 </head>
 <body>
     <h1>🏎️ F1 2026 BINGO - Player <span id="player">?</span></h1>
     <div class="grid" id="grid"></div>
-    <button onclick="resetCard()">Reset Card</button>
-    <div id="win">BINGO! 🏆</div>
+    <button onclick="resetMarks()">Reset Card</button>
+    <div id="stars">Stars: 0</div>
+    <div id="win">Congratulations! Full Bingo! 🏆</div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const player = params.get('player') || '1';
         const data = atob(params.get('data') || '');
-        const exp = parseInt(params.get('exp') || '0');
+        const code = params.get('code') || 'default';
 
-        // Check if link expired
-        if (Date.now() > exp) {
-            alert('This link has expired. Ask the host for a new one.');
-            document.body.innerHTML = '<h1 style="color:red">Link Expired</h1>';
-        } else {
-            document.getElementById('player').textContent = player;
+        document.getElementById('player').textContent = player
 
-            const phrases = data.split('|');
-            const grid = document.getElementById('grid');
+        const phrases = data.split('|');
+        const grid = document.getElementById('grid');
 
-            for (let i = 0; i < 25; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.textContent = i === 12 ? 'FREE' : (phrases[i] || '?');
-                if (i === 12) cell.classList.add('marked');
+        for (let i = 0; i < 25; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.textContent = i === 12 ? 'FREE' : (phrases[i] || '?');
+            if (i === 12) cell.classList.add('marked');
 
-                cell.onclick = () => {
-                    cell.classList.toggle('marked');
-                    checkWin();
-                };
+            cell.onclick = () => {
+                cell.classList.toggle('marked');
+                checkAlmostBingo();
+                checkWin();
+                saveMarks();
+            };
 
-                grid.appendChild(cell);
+            grid.appendChild(cell);
+        }
+
+        let halfBingoCount = 0;
+        const stars = document.getElementById('stars');
+
+        function checkAlmostBingo() {
+            const cells = Array.from(grid.children);
+            const rows = [ [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24] ];
+            const cols = [ [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24] ];
+
+            for (const line of [...rows, ...cols]) {
+                if (line.every(idx => cells[idx].classList.contains('marked'))) {
+                    halfBingoCount += 1
+                    alert('Star! Almost Bingo!');
+                    stars.textContent = `Stars: ${halfBingoCount}`;
+                }
             }
         }
 
         function checkWin() {
-            const cells = Array.from(document.querySelectorAll('.grid .cell'));
+            const cells = Array.from(grid.children);
             const patterns = [
-                [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24], // rows
-                [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24], // columns
                 [0,6,12,18,24], [4,8,12,16,20] // diagonals
             ];
 
@@ -117,11 +78,38 @@
                     return;
                 }
             }
+
+            // Full card check
+            if (cells.every(cell => cell.classList.contains('marked'))) {
+                document.getElementById('win').style.display = 'block';
+            }
         }
 
-        function resetCard() {
+        function saveMarks() {
+            const cells = Array.from(grid.children);
+            const marks = cells.map(cell => cell.classList.contains('marked'));
+            localStorage.setItem(`bingoMarks_${code}_${player}`, JSON.stringify(marks));
+        }
+
+        function loadMarks() {
+            const saved = localStorage.getItem(`bingoMarks_${code}_${player}`);
+            if (saved) {
+                const marks = JSON.parse(saved);
+                const cells = Array.from(grid.children);
+                for (let i = 0; i < 25; i++) {
+                    if (marks[i]) cells[i].classList.add('marked');
+                }
+            }
+        }
+
+        function resetMarks() {
+            localStorage.removeItem(`bingoMarks_${code}_${player}`);
             location.reload();
         }
+
+        loadMarks(); // Load saved marks on page load
+        checkAlmostBingo(); // Update stars if loaded with almost bingos
+        checkWin(); // Check if loaded with full bingo
     </script>
 </body>
 </html>
